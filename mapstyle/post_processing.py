@@ -9,6 +9,9 @@
 
 import os, processing, math, random, time
 
+from PyQt5.QtCore import QVariant
+from qgis.core import *
+
 #-------------------------------------------------#
 #   V a r i a b l e s   a n d   S e t t i n g s   #
 #-------------------------------------------------#
@@ -1254,7 +1257,7 @@ if proc_cr_tactile_pav:
     layer_tactile_paving = processing.run('native:dissolve', { 'FIELD' : ['barrier', 'highway', 'width', 'offset'], 'INPUT' : layer_tactile_paving, 'OUTPUT': 'memory:'})['OUTPUT']
     layer_tactile_paving = processing.run('native:multiparttosingleparts', { 'INPUT' : layer_tactile_paving, 'OUTPUT': 'memory:'})['OUTPUT']
     layer_tactile_paving = clearAttributes(layer_tactile_paving, ['barrier', 'highway', 'width', 'offset'])
-    qgis.core.QgsVectorFileWriter.writeAsVectorFormat(layer_tactile_paving, proc_dir + 'tactile_paving.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
+    QgsVectorFileWriter.writeAsVectorFormat(layer_tactile_paving, proc_dir + 'tactile_paving.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
 
     clearVariables([layer_kerb, layer_kerb_outlines, layer_kerb_tactile_paving, layer_tactile_paving, layer_tactile_paving_lines, layer_tactile_paving_nodes, layer_tactile_paving_nodes_buffer, layer_tactile_paving_ways, layer_ways])
 
@@ -3411,7 +3414,7 @@ if proc_lane_markings:
     list_lane_attributes.append('id')
     layer_lanes = processing.run('native:multiparttosingleparts', { 'INPUT' : layer_lanes, 'OUTPUT': 'memory:'})['OUTPUT']
     layer_lanes = clearAttributes(layer_lanes, list_lane_attributes)
-    qgis.core.QgsVectorFileWriter.writeAsVectorFormat(layer_lanes, proc_dir + 'marked_lanes.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
+    QgsVectorFileWriter.writeAsVectorFormat(layer_lanes, proc_dir + 'marked_lanes.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
 
     #--------------------------------------
     #Abschließend Haltelinien generieren
@@ -4018,7 +4021,7 @@ if proc_traffic_calming:
     for i in range(len(street_attributes)):
         street_attributes[i] = prefix + street_attributes[i]
     layer_traffic_calming = clearAttributes(layer_traffic_calming, street_attributes + traffic_calming_attributes)
-    qgis.core.QgsVectorFileWriter.writeAsVectorFormat(layer_traffic_calming, proc_dir + 'traffic_calming.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
+    QgsVectorFileWriter.writeAsVectorFormat(layer_traffic_calming, proc_dir + 'traffic_calming.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
 
     clearVariables([layer_traffic_calming, layer_street_segments, layer_way_segments, layer_street_nodes])
 
@@ -4070,7 +4073,7 @@ if proc_cycleways:
 
     #Radwege bereinigen und abspeichern
     layer_cycleways = clearAttributes(layer_cycleways, ['id', 'highway', 'name', 'oneway', 'cycleway', 'cycleway:type', 'crossing', 'crossing:markings', 'is_sidepath', 'width', 'surface', 'smoothness', 'surface:colour', 'separation', 'separation:left', 'separation:right', 'separation:both', 'buffer', 'buffer:left', 'buffer:right', 'buffer:both', 'lanes', 'turn:lanes', 'placement', 'is_on_carriageway'])
-    qgis.core.QgsVectorFileWriter.writeAsVectorFormat(layer_cycleways, proc_dir + 'cycleways.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
+    QgsVectorFileWriter.writeAsVectorFormat(layer_cycleways, proc_dir + 'cycleways.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
 
     clearVariables([layer_cycleways, layer_cycleways_on_carriageway, layer_cycleways_off_carriageway, layer_crossings, layer_crossings_buffer, layer_stop_lines, layer_cycleways_crossings])
 
@@ -4402,7 +4405,7 @@ if proc_pitches:
     layer_centroids.updateFields()
     layer_centroids.commitChanges()
 
-    qgis.core.QgsVectorFileWriter.writeAsVectorFormat(layer_centroids, proc_dir + 'pitch_marker.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
+    QgsVectorFileWriter.writeAsVectorFormat(layer_centroids, proc_dir + 'pitch_marker.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
 
     clearVariables([layer_centroids, layer_pitches, layer_vertices, pitch_dict])
 
@@ -4566,7 +4569,7 @@ if proc_orient_man_made:
     layer_street_furniture = clearAttributes(layer_street_furniture, ['id', 'man_made', 'highway', 'direction', 'angle', 'ref', 'street_cabinet', 'width', 'length', 'lamp_mount', 'amenity', 'vending'])
     print(time.strftime('%H:%M:%S', time.localtime()), '   Speichere Daten...')
 
-    qgis.core.QgsVectorFileWriter.writeAsVectorFormat(layer_street_furniture, proc_dir + 'street_furniture.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
+    QgsVectorFileWriter.writeAsVectorFormat(layer_street_furniture, proc_dir + 'street_furniture.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
 
     clearVariables([id_list_roads, layer_next_path, layer_next_roads, layer_next_streets, layer_next_ways, layer_street_furniture, layer_street_furniture_buffer_12, layer_street_furniture_buffer_5, layer_street_furniture_hublines, layer_street_furniture_oriented, layer_street_furniture_snapped, layer_street_furniture_snapped_roads, layer_street_furniture_snapped_ways, layer_street_furniture_vanilla, layer_street_furniture_vertex1])
 
@@ -4722,7 +4725,7 @@ if proc_forests:
         layer_tree_points.changeAttributeValue(tree.id(), id_rotation, rotation)
     layer_tree_points.updateFields()
     layer_tree_points.commitChanges()
-    qgis.core.QgsVectorFileWriter.writeAsVectorFormat(layer_tree_points, proc_dir + 'trees_forest.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
+    QgsVectorFileWriter.writeAsVectorFormat(layer_tree_points, proc_dir + 'trees_forest.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
 
     clearVariables([layer_forest, layer_forest_grid, layer_trees, layer_tree_points, layer_wood])
 
@@ -4830,7 +4833,7 @@ if proc_cars:
         layer_cars.changeAttributeValue(feature.id(), id_modell, modell)
         layer_cars.changeAttributeValue(feature.id(), id_colour, colour)
     layer_cars.commitChanges()
-    qgis.core.QgsVectorFileWriter.writeAsVectorFormat(layer_cars, proc_dir + 'street_parking_points_processed.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
+    QgsVectorFileWriter.writeAsVectorFormat(layer_cars, proc_dir + 'street_parking_points_processed.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
 
     clearVariables([layer_cars, layer_parking])
 
@@ -4939,7 +4942,7 @@ if proc_labels:
     layer_streetnames = processing.run('native:splitwithlines', { 'INPUT' : QgsProcessingFeatureSourceDefinition(layer_streetnames.id(), selectedFeaturesOnly=True), 'LINES' : layer_main_streets, 'OUTPUT': 'memory:'})['OUTPUT']
     layer_streetnames = processing.run('native:mergevectorlayers', { 'LAYERS' : [layer_streetnames, layer_main_streets], 'OUTPUT': 'memory:'})['OUTPUT']
     layer_streetnames = clearAttributes(layer_streetnames, streetname_attributes)
-    qgis.core.QgsVectorFileWriter.writeAsVectorFormat(layer_streetnames, proc_dir + 'street_names.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
+    QgsVectorFileWriter.writeAsVectorFormat(layer_streetnames, proc_dir + 'street_names.geojson', 'utf-8', QgsCoordinateReferenceSystem(crs_from), 'GeoJson')
 
     #für Gewässernamen:
     print(time.strftime('%H:%M:%S', time.localtime()), '   Gewässerlinien an Brücken segmentieren...')
