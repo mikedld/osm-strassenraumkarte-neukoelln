@@ -1264,7 +1264,7 @@ if proc_cr_tactile_pav:
     layer_tactile_paving_ways.commitChanges()
 
     #verschiedene Layer vereinigen
-    layer_tactile_paving = processing.run('native:mergevectorlayers', { 'LAYERS' : [layer_tactile_paving_lines, layer_kerb_tactile_paving, layer_tactile_paving_ways], 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_tactile_paving = processing.run('native:mergevectorlayers', { 'LAYERS' : [l for l in [layer_tactile_paving_lines, layer_kerb_tactile_paving, layer_tactile_paving_ways] if l.geometryType() != 4], 'OUTPUT': 'memory:'})['OUTPUT']
     layer_tactile_paving = processing.run('native:dissolve', { 'FIELD' : ['barrier', 'highway', 'width', 'offset'], 'INPUT' : layer_tactile_paving, 'OUTPUT': 'memory:'})['OUTPUT']
     layer_tactile_paving = processing.run('native:multiparttosingleparts', { 'INPUT' : layer_tactile_paving, 'OUTPUT': 'memory:'})['OUTPUT']
     layer_tactile_paving = clearAttributes(layer_tactile_paving, ['barrier', 'highway', 'width', 'offset'])
