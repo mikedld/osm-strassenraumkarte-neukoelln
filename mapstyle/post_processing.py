@@ -47,8 +47,11 @@ proc_parking_areas  = 0     # Erzeugt einen Layer mit Kiezflächen, denen Zahlen
 proc_protected_bl   = 0     # Filtert separat gemappte geschützte Radspuren und richtet sie an Straßenlinie aus
 
 #project directory
-from console.console import _console
-project_dir = os.path.dirname(_console.console.tabEditorWidget.currentWidget().path) + '/'
+try:
+    from console.console import _console
+    project_dir = os.path.dirname(_console.console.tabEditorWidget.currentWidget().path) + '/'
+except ImportError:
+    project_dir = os.path.dirname(__file__) + '/'
 data_dir = project_dir + 'layer/geojson/'
 proc_dir = data_dir + 'post_processed/'
 
