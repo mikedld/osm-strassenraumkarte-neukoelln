@@ -2677,6 +2677,10 @@ if proc_lane_markings:
     QgsProject.instance().addMapLayer(layer_lanes, False)
     layer_lanes.startEditing()
     #zusammenfallende Linien an Verzweigungspunkten von Zweirichtungsfahrbahnen durch Versatz entschärfen
+    layer_dual_carriageways_vertices = None
+    layer_lanes_dual_carriageway = None
+    layer_lanes_single_carriageway = None
+    vertex_list = []
     if layer_lanes.fields().indexOf('dual_carriageway') != -1:
         print(time.strftime('%H:%M:%S', time.localtime()), '   Korrigiere Verzweigungspunkte...')
 #       #damit Zweirichtungsfahrbahnen mit gleichen Eigenschaften keine Ringe bilden, Segmente an Linienschnittpunkten teilen
@@ -2704,7 +2708,6 @@ if proc_lane_markings:
 
 
         #Koordinaten der ausgewählten Punkte speichern
-        vertex_list = []
         for vertex in layer_dual_carriageways_vertices.selectedFeatures():
             vertex_x = vertex.geometry().asPoint().x()
             vertex_y = vertex.geometry().asPoint().y()
@@ -3738,6 +3741,8 @@ if proc_lane_markings:
         end_y = node_y - yv_end
 
         #Linie zeichnen, wenn diese nicht aus Knotenpunktgeometrie ableitbar ist
+        layer_junction_lines = None
+        layer_split_line = None
         if not line_from_junction:
             line_start = QgsPointXY(start_x, start_y)
             line_end = QgsPointXY(end_x, end_y)
