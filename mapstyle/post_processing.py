@@ -760,6 +760,14 @@ def getAbsolutePlacement(lanes, lanes_backward, placement, placement_forward, pl
 
 
 
+def try_get_attribute(feature, name):
+    try:
+        return feature.attribute(name)
+    except KeyError:
+        return NULL
+
+
+
 #--------------------------------
 #      S c r i p t   S t a r t
 #--------------------------------
@@ -4598,12 +4606,12 @@ if proc_trees:
     id_diameter = layer_trees.fields().indexOf('diameter_crown')
     id_circumference = layer_trees.fields().indexOf('circumference')
     for feature in layer_trees.getFeatures():
-        diameter = feature.attribute('diameter_crown')
-        circumference = feature.attribute('circumference')
+        diameter = try_get_attribute(feature, 'diameter_crown')
+        circumference = try_get_attribute(feature, 'circumference')
         if feature.attribute('natural') == 'tree' or feature.attribute('natural') == 'shrub':
             if diameter == NULL:
-                circumference = feature.attribute('circumference')
-                height = feature.attribute('height')
+                circumference = try_get_attribute(feature, 'circumference')
+                height = try_get_attribute(feature, 'height')
                 if circumference:
                     try:
                         diameter = float(circumference) * 7.5
