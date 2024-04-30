@@ -71,6 +71,34 @@ lane_width_default = 3 #wenn nicht anders angegeben mit width:lanes*
 cycleway_width_default = 1.5 #wenn nicht anders angegeben mit cycleway*:width oder width:lanes* in Mittellagen
 parking_width_default = 2.2 #wenn nicht anders angegeben mit parking:<side>:width
 
+# Override settings from environment variables, if present
+proc_crossings = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_CROSSINGS", str(proc_crossings)))
+proc_cr_markings = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_CR_MARKINGS", str(proc_cr_markings)))
+proc_cr_lines = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_CR_LINES", str(proc_cr_lines)))
+proc_cr_tactile_pav = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_CR_TACTILE_PAV", str(proc_cr_tactile_pav)))
+proc_lane_markings = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_LANE_MARKINGS", str(proc_lane_markings)))
+proc_highway_backup = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_HIGHWAY_BACKUP", str(proc_highway_backup)))
+proc_service = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_SERVICE", str(proc_service)))
+proc_oneways = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_ONEWAYS", str(proc_oneways)))
+proc_traffic_calming = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_TRAFFIC_CALMING", str(proc_traffic_calming)))
+proc_cycleways = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_CYCLEWAYS", str(proc_cycleways)))
+proc_path_areas = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_PATH_AREAS", str(proc_path_areas)))
+proc_railways = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_RAILWAYS", str(proc_railways)))
+proc_buildings = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_BUILDINGS", str(proc_buildings)))
+proc_housenumbers = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_HOUSENUMBERS", str(proc_housenumbers)))
+proc_water_body = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_WATER_BODY", str(proc_water_body)))
+proc_landcover = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_LANDCOVER", str(proc_landcover)))
+proc_pitches = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_PITCHES", str(proc_pitches)))
+proc_playgr_landuse = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_PLAYGR_LANDUSE", str(proc_playgr_landuse)))
+proc_playgr_equip = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_PLAYGR_EQUIP", str(proc_playgr_equip)))
+proc_orient_man_made = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_ORIENT_MAN_MADE", str(proc_orient_man_made)))
+proc_trees = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_TREES", str(proc_trees)))
+proc_forests = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_FORESTS", str(proc_forests)))
+proc_cars = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_CARS", str(proc_cars)))
+proc_labels = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_LABELS", str(proc_labels)))
+proc_parking_areas = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_PARKING_AREAS", str(proc_parking_areas)))
+proc_protected_bl = int(os.environ.get("OSM_STRASSENRAUMKARTE_PROC_PROTECTED_BL", str(proc_protected_bl)))
+
 #Liste von Attributen, die für den Straßenlayer bewahrt wird
 #Achtung: Bestimmte Angaben sind für die Verarbeitung notwendig
 street_key_list = [
@@ -265,6 +293,10 @@ layer_raw_kerb_street_areas_polygons = layer_raw_area_highway_polygons = layer_r
 #Speicheroptionen für gewünschtes (metrisches) Ziel-KBS
 crs_from = "EPSG:4326"
 crs_to = "EPSG:25833"
+
+# Override settings from environment variables, if present
+crs_to = os.environ.get("OSM_STRASSENRAUMKARTE_CRS_TO", crs_to)
+
 transform_context = QgsCoordinateTransformContext()
 transform_context.addCoordinateOperation(QgsCoordinateReferenceSystem(crs_from), QgsCoordinateReferenceSystem(crs_to), "")
 coordinateTransformContext=QgsProject.instance().transformContext()
