@@ -3914,7 +3914,6 @@ if proc_highway_backup:
     if not layer_raw_kerb_street_areas_polygons:
         #layer_raw_kerb_street_areas_polygons = QgsVectorLayer(data_dir + 'kerb/kerb_street_areas.geojson|geometrytype=Polygon', 'Fahrbahnbereiche (raw)', 'ogr')
         layer_raw_kerb_street_areas_polygons = createStreetAreaPolygons()
-    QgsProject.instance().addMapLayer(layer_raw_kerb_street_areas_polygons, False)
 
     #Umweg über clip geht deutlich schneller als direkte difference aus kerb-layer
     layer_highway_clipped = processing.run('native:clip', {'INPUT': layer_highway, 'OVERLAY': layer_raw_kerb_street_areas_polygons, 'OUTPUT': 'memory:'})['OUTPUT']
