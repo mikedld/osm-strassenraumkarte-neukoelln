@@ -1112,7 +1112,7 @@ if proc_cr_lines:
                 crossing_line_markings.deleteFeature(line.id())
 
             #Zebra vereinheitlichen
-            crossing = NULL
+            crossing_ref = NULL
             if id_crossing_ref != -1:
                 crossing_ref = line.attribute('crossing_ref')
             if crossing_ref == 'zebra':
