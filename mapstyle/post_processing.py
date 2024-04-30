@@ -1121,6 +1121,15 @@ if proc_cr_lines:
     #aus Node-Daten interpolierte Linien mit Wegelinien zusammenführen
     layer_crossing_lines = processing.run('native:mergevectorlayers', {'LAYERS': [crossing_line_markings, layer_crossing_path], 'OUTPUT': 'memory:'})['OUTPUT']
 
+    # Without this zebra stripes are tilted in the wrong direction, though the actual issue could well be elsewhere
+    with edit(layer_crossing_lines):
+        id_crossing = crossing_line_markings.fields().indexOf('crossing')
+        id_crossing_angle = layer_crossing_lines.fields().indexOf('highway:angle')
+        for line in layer_crossing_lines.getFeatures():
+            angle = line.attribute('highway:angle')
+            if angle != NULL:
+                layer_crossing_lines.changeAttributeValue(line.id(), id_crossing_angle, angle + 180)
+
     #Verbundene Linien vereinigen, um getrennte OSM-Segmente zu vereinigen
     layer_crossing_lines = processing.run('native:dissolve', { 'FIELD' : ['highway', 'crossing', 'crossing_ref', 'temporary', 'width', 'highway:angle', 'highway:crossing:buffer_marking'], 'INPUT' : layer_crossing_lines, 'OUTPUT': 'memory:'})['OUTPUT']
     layer_crossing_lines = processing.run('native:multiparttosingleparts', { 'INPUT' : layer_crossing_lines, 'OUTPUT': 'memory:'})['OUTPUT']
