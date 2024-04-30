@@ -768,6 +768,16 @@ def try_get_attribute(feature, name):
 
 
 
+def processing_run_to_memory(name, algo, params):
+    try:
+        layer = processing.run(algo, params | {'OUTPUT': 'memory:'})['OUTPUT']
+    except QgsProcessingException: # "Could not create memory layer" (no explanation as to why...)
+        layer = processing.run(algo, params | {'OUTPUT': proc_dir + f'tmp_{name}.geojson'})['OUTPUT']
+        layer = QgsVectorLayer(layer, f'tmp_{name}', 'ogr')
+    return layer
+
+
+
 #--------------------------------
 #      S c r i p t   S t a r t
 #--------------------------------
@@ -1209,7 +1219,7 @@ if proc_cr_tactile_pav:
     if not layer_raw_path_ways:
         layer_raw_path_ways = QgsVectorLayer(data_dir + 'path.geojson|geometry=LineString', 'path (raw)', 'ogr')
 
-    layer_ways = processing.run('native:reprojectlayer', { 'INPUT' : layer_raw_path_ways, 'TARGET_CRS' : QgsCoordinateReferenceSystem(crs_to), 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_ways = processing_run_to_memory('ways', 'native:reprojectlayer', { 'INPUT' : layer_raw_path_ways, 'TARGET_CRS' : QgsCoordinateReferenceSystem(crs_to) })
     layer_ways = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_ways, 'EXPRESSION' : '"footway" = \'crossing\'', 'OUTPUT': 'memory:'})['OUTPUT']
 
     #Wegebreiten (Breiten der Querungsstellen) auf Punkte übertragen, um Bodenleitsysteme entsprechend breit zu zeichnen
@@ -1249,7 +1259,7 @@ if proc_cr_tactile_pav:
     print(time.strftime('%H:%M:%S', time.localtime()), '   Integriere Wegesegmente mit Leitsystemen...')
 
     #Wege mit separatem, bordstein-unabhängigem Bodenleitsystem herausfiltern
-    layer_tactile_paving_ways = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_raw_path_ways, 'EXPRESSION' : '"tactile_paving" = \'yes\' and "footway" <> \'crossing\'', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_tactile_paving_ways = processing_run_to_memory('tactile_paving_ways', 'qgis:extractbyexpression', { 'INPUT' : layer_raw_path_ways, 'EXPRESSION' : '"tactile_paving" = \'yes\' and "footway" <> \'crossing\'' })
     layer_tactile_paving_ways = clearAttributes(layer_tactile_paving_ways, ['barrier', 'highway'])
     #Bodenleitsystem auf Wegen ohne Versatz
     layer_tactile_paving_ways.dataProvider().addAttributes([QgsField('offset', QVariant.String)])
@@ -4908,7 +4918,7 @@ if proc_labels:
         layer_streetnames_dual_segment = processing.run('native:splitwithlines', { 'INPUT' : QgsProcessingFeatureSourceDefinition(layer_streetnames_dual.id(), selectedFeaturesOnly=True), 'LINES' : QgsProcessingFeatureSourceDefinition(layer_streetnames_not_dual.id(), selectedFeaturesOnly=True), 'OUTPUT': 'memory:'})['OUTPUT']
         merge_list.append(layer_streetnames_dual_segment)
 
-    layer_streetnames_dual = processing.run('native:mergevectorlayers', { 'LAYERS' : merge_list, 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_streetnames_dual = processing_run_to_memory('streetnames_dual', 'native:mergevectorlayers', { 'LAYERS' : merge_list })
 
     #eins der Parallel-Segmente entfernen - Straßenname soll nur auf einer der beiden Seiten angezeigt werden
     #dafür 15 Meter Puffer um Mittelpunkt ziehen und Objekte gleichen Namens in der Umgebung löschen
@@ -4990,7 +5000,7 @@ if proc_parking_areas:
 
     print(time.strftime('%H:%M:%S', time.localtime()), '...Lade Daten...')
     layer_parking_areas = QgsVectorLayer(parking_dir + 'parking_area.geojson|geometrytype=Polygon', 'parking areas', 'ogr')
-    layer_parking_areas = processing.run('native:reprojectlayer', { 'INPUT' : layer_parking_areas, 'TARGET_CRS' : QgsCoordinateReferenceSystem(crs_to), 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_parking_areas = processing_run_to_memory('parking_areas', 'native:reprojectlayer', { 'INPUT' : layer_parking_areas, 'TARGET_CRS' : QgsCoordinateReferenceSystem(crs_to) })
     layer_parking_lanes_points = QgsVectorLayer(data_dir + 'parking/parking_way_points_translated.geojson|geometrytype=Point', 'parking street points', 'ogr')
     layer_kieze = QgsVectorLayer(parking_dir + 'kieze.geojson|geometrytype=Polygon', 'kieze', 'ogr')
 
@@ -5006,7 +5016,7 @@ if proc_parking_areas:
     #Einzelne Stellplätze zählen
     print(time.strftime('%H:%M:%S', time.localtime()), '...Zähle Stellplätze für Straßenparken...')
     #1) Straßenparken - sowohl separat gemappte Flächen als auch aus dem Parkstreifenlayer ermitteln
-    layer_parking_kieze = processing.run('native:countpointsinpolygon', { 'FIELD' : 'parking_street-lanes-lines', 'POINTS' : layer_parking_lanes_points, 'POLYGONS' : layer_kieze, 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_parking_kieze = processing_run_to_memory('parking_kieze', 'native:countpointsinpolygon', { 'FIELD' : 'parking_street-lanes-lines', 'POINTS' : layer_parking_lanes_points, 'POLYGONS' : layer_kieze })
     processing.run('qgis:selectbyexpression', {'INPUT' : layer_parking_area_points, 'EXPRESSION' : '"parking" = \'lane\' or "parking" = \'street_side\''})
     layer_parking_kieze = processing.run('native:countpointsinpolygon', { 'FIELD' : 'parking_street-lanes-areas', 'POINTS' : QgsProcessingFeatureSourceDefinition(layer_parking_area_points.id(), selectedFeaturesOnly=True), 'POLYGONS' : layer_parking_kieze, 'OUTPUT': 'memory:'})['OUTPUT']
     #2) Park-/Stellplätze
