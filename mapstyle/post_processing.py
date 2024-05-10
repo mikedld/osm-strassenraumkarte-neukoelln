@@ -312,7 +312,7 @@ def createStreetAreaPolygons():
     print(time.strftime('%H:%M:%S', time.localtime()), '      Lade Straßenflächen...')
     layer_area_highway_polygons = QgsVectorLayer(data_dir + 'area_highway.geojson|geometrytype=Polygon', 'area_highway (raw)', 'ogr')
     #extract carriageway areas
-    layer_street_area_polygons = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_area_highway_polygons, 'EXPRESSION' : '"area:highway" = \'primary\' OR "area:highway" = \'primary_link\' OR "area:highway" = \'secondary\' OR "area:highway" = \'secondary_link\' OR "area:highway" = \'tertiary\' OR "area:highway" = \'tertiary_link\' OR "area:highway" = \'residential\' OR "area:highway" = \'unclassified\' OR "area:highway" = \'living_street\' OR "area:highway" = \'pedestrian\' OR "area:highway" = \'road\'', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_street_area_polygons = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_area_highway_polygons, 'EXPRESSION' : '"area:highway" IS \'primary\' OR "area:highway" IS \'primary_link\' OR "area:highway" IS \'secondary\' OR "area:highway" IS \'secondary_link\' OR "area:highway" IS \'tertiary\' OR "area:highway" IS \'tertiary_link\' OR "area:highway" IS \'residential\' OR "area:highway" IS \'unclassified\' OR "area:highway" IS \'living_street\' OR "area:highway" IS \'pedestrian\' OR "area:highway" IS \'road\'', 'OUTPUT': 'memory:'})['OUTPUT']
     print(time.strftime('%H:%M:%S', time.localtime()), '      Vereinige mit externen Daten...')
     #temporary: Merge OSM highway areas with an external dataset of carriageway areas
     layer_external_street_area_polygons = QgsVectorLayer(data_dir + 'kerb/kerb_street_areas.geojson|geometrytype=Polygon', 'Fahrbahnbereiche (extern, raw)', 'ogr')
@@ -843,7 +843,7 @@ if proc_crossings:
         layer_raw_path_ways = QgsVectorLayer(data_dir + 'path.geojson|geometrytype=LineString', 'path (raw)', 'ogr')
     if not layer_raw_highway_points:
         layer_raw_highway_points = QgsVectorLayer(data_dir + 'highway.geojson|geometrytype=Point', 'highway (raw)', 'ogr')
-    layer_crossing = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_raw_highway_points, 'EXPRESSION' : '"highway" = \'crossing\' AND ("crossing" <> \'unmarked\' OR "crossing:buffer_marking" IS NOT NULL)', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_crossing = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_raw_highway_points, 'EXPRESSION' : '"highway" IS \'crossing\' AND ("crossing" IS NOT \'unmarked\' OR "crossing:buffer_marking" IS NOT NULL)', 'OUTPUT': 'memory:'})['OUTPUT']
 
     layers = prepareLayers(layer_raw_highway_ways, layer_raw_path_ways, layer_crossing)
     if layers:
@@ -1019,7 +1019,7 @@ if proc_cr_lines:
     layer_crossing = QgsVectorLayer(proc_dir + 'crossing.geojson|geometrytype=Point', 'Querungsstellen', 'ogr')
     if not layer_raw_path_ways:
         layer_raw_path_ways = QgsVectorLayer(data_dir + 'path.geojson|geometrytype=LineString', 'path (raw)', 'ogr')
-    layer_crossing_path = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_raw_path_ways, 'EXPRESSION' : '"footway" = \'crossing\' AND "crossing" <> \'unmarked\' AND "crossing:markings" <> \'no\' AND "crossing:markings" <> \'surface\'', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_crossing_path = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_raw_path_ways, 'EXPRESSION' : '"footway" = \'crossing\' AND "crossing" IS NOT \'unmarked\' AND "crossing:markings" IS NOT \'no\' AND "crossing:markings" IS NOT \'surface\'', 'OUTPUT': 'memory:'})['OUTPUT']
     layer_crossing_path = processing.run('native:reprojectlayer', { 'INPUT' : layer_crossing_path, 'TARGET_CRS' : QgsCoordinateReferenceSystem(crs_to), 'OUTPUT': 'memory:'})['OUTPUT']
 
     if not layer_raw_kerb_street_areas_polygons:
@@ -1030,7 +1030,7 @@ if proc_cr_lines:
     layer_crossing_path = processing.run('native:joinattributesbylocation', {'INPUT': layer_crossing_path, 'JOIN' : layer_crossing, 'JOIN_FIELDS' : ['crossing', 'crossing:markings', 'crossing_ref', 'angle', 'crossing:buffer_marking'], 'PREFIX' : 'highway:', 'OUTPUT': 'memory:'})['OUTPUT']
 
     #noch einmal filtern und nur markierte Querungsstellen behalten (Ampeln, Zebrastreifen, sonstige "marked" crossings außer crossing:markings=surface)
-    layer_crossing_path = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_crossing_path, 'EXPRESSION' : '"crossing" = \'marked\' OR "crossing" = \'traffic_signals\' OR "crossing" = \'zebra\' OR "crossing_ref" = \'zebra\' OR ("crossing:markings" IS NOT NULL AND "crossing:markings" <> \'no\' AND "crossing:markings" <> \'surface\') OR "highway:crossing" = \'marked\' OR "highway:crossing" = \'traffic_signals\' OR "highway:crossing" = \'zebra\' OR "highway:crossing_ref" = \'zebra\' OR ("highway:crossing:markings" IS NOT NULL AND "highway:crossing:markings" <> \'no\' AND "highway:crossing:markings" <> \'surface\')', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_crossing_path = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_crossing_path, 'EXPRESSION' : '"crossing" = \'marked\' OR "crossing" = \'traffic_signals\' OR "crossing" = \'zebra\' OR "crossing_ref" = \'zebra\' OR ("crossing:markings" IS NOT NULL AND "crossing:markings" IS NOT \'no\' AND "crossing:markings" IS NOT \'surface\') OR "highway:crossing" = \'marked\' OR "highway:crossing" = \'traffic_signals\' OR "highway:crossing" = \'zebra\' OR "highway:crossing_ref" = \'zebra\' OR ("highway:crossing:markings" IS NOT NULL AND "highway:crossing:markings" IS NOT \'no\' AND "highway:crossing:markings" IS NOT \'surface\')', 'OUTPUT': 'memory:'})['OUTPUT']
 
     QgsProject.instance().addMapLayer(layer_crossing, False)
     QgsProject.instance().addMapLayer(layer_crossing_path, False)
@@ -1085,7 +1085,7 @@ if proc_cr_lines:
     QgsProject.instance().addMapLayer(layer_vertices, False)
 
     #alle crossing-Punkte auswählen, die für spätere Markierungen in Frage kommen
-    layer_crossing = processing.run('qgis:extractbyexpression', {'INPUT' : layer_crossing, 'EXPRESSION' : '"crossing:highway" <> \'cycleway\' AND "crossing:markings" <> \'no\' and "crossing:markings" <> \'surface\' AND ("crossing" = \'traffic_signals\' or "crossing" = \'marked\' or "crossing" = \'zebra\' or "crossing_ref" = \'zebra\' or "crossing:markings" IS NOT NULL)', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_crossing = processing.run('qgis:extractbyexpression', {'INPUT' : layer_crossing, 'EXPRESSION' : '"crossing:highway" IS NOT \'cycleway\' and "crossing:markings" IS NOT \'no\' and "crossing:markings" IS NOT \'surface\' and ("crossing" = \'traffic_signals\' or "crossing" = \'marked\' or "crossing" = \'zebra\' or "crossing_ref" = \'zebra\' or "crossing:markings" IS NOT NULL)', 'OUTPUT': 'memory:'})['OUTPUT']
     QgsProject.instance().addMapLayer(layer_crossing, False)
 
     #Die Stützpunkte jedes Weges durchgehen und prüfen, ob die Linien über die crossing-Punkte hinausgehen (also vermutlich bis zum Bordstein)
@@ -1186,7 +1186,7 @@ if proc_cr_lines:
 
     #Markierungslinien durch Versatz parallel zur Wegelinie erzeugen (außer Zebrastreifen)
     QgsProject.instance().addMapLayer(layer_crossing_lines, False)
-    processing.run('qgis:selectbyexpression', {'INPUT' : layer_crossing_lines, 'EXPRESSION' : '"crossing" <> \'zebra\''})
+    processing.run('qgis:selectbyexpression', {'INPUT' : layer_crossing_lines, 'EXPRESSION' : '"crossing" IS NOT \'zebra\''})
 
     layer_crossing_lines1 = processing.run('native:offsetline', {'INPUT': QgsProcessingFeatureSourceDefinition(layer_crossing_lines.id(), selectedFeaturesOnly=True), 'DISTANCE' : QgsProperty.fromExpression('if("width", "width" / 2, 2.5)'), 'OUTPUT': 'memory:'})['OUTPUT']
     layer_crossing_lines2 = processing.run('native:offsetline', {'INPUT': QgsProcessingFeatureSourceDefinition(layer_crossing_lines.id(), selectedFeaturesOnly=True), 'DISTANCE' : QgsProperty.fromExpression('if("width", -"width" / 2, -2.5)'), 'OUTPUT': 'memory:'})['OUTPUT']
@@ -1247,7 +1247,7 @@ if proc_cr_tactile_pav:
 
     #Bordsteinliniensegmente, an denen bereits tactile_paving angegeben ist, separieren
     layer_kerb_tactile_paving = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_kerb, 'EXPRESSION' : '"tactile_paving" = \'yes\'', 'OUTPUT': 'memory:'})['OUTPUT']
-    layer_kerb = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_kerb, 'EXPRESSION' : '"tactile_paving" <> \'yes\'', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_kerb = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_kerb, 'EXPRESSION' : '"tactile_paving" IS NOT \'yes\'', 'OUTPUT': 'memory:'})['OUTPUT']
 
     #später benötigte Breiten- und Versatz-Attribute anlegen und füllen
     layer_kerb_tactile_paving = clearAttributes(layer_kerb_tactile_paving, ['barrier', 'highway'])
@@ -1314,7 +1314,7 @@ if proc_cr_tactile_pav:
     print(time.strftime('%H:%M:%S', time.localtime()), '   Integriere Wegesegmente mit Leitsystemen...')
 
     #Wege mit separatem, bordstein-unabhängigem Bodenleitsystem herausfiltern
-    layer_tactile_paving_ways = processing_run_to_memory('tactile_paving_ways', 'qgis:extractbyexpression', { 'INPUT' : layer_raw_path_ways, 'EXPRESSION' : '"tactile_paving" = \'yes\' and "footway" <> \'crossing\'' })
+    layer_tactile_paving_ways = processing_run_to_memory('tactile_paving_ways', 'qgis:extractbyexpression', { 'INPUT' : layer_raw_path_ways, 'EXPRESSION' : '"tactile_paving" = \'yes\' and "footway" IS NOT \'crossing\'', 'OUTPUT': 'memory:'})
     layer_tactile_paving_ways = clearAttributes(layer_tactile_paving_ways, ['barrier', 'highway'])
     #Bodenleitsystem auf Wegen ohne Versatz
     layer_tactile_paving_ways.dataProvider().addAttributes([QgsField('offset', QVariant.String)])
@@ -1371,7 +1371,7 @@ if proc_lane_markings:
     print(time.strftime('%H:%M:%S', time.localtime()), '      Segmente an Ampeln und Stopschildern...')
     #Segmente an Ampeln und Stopschildern zur Generierung der Haltelinien ebenfalls einbeziehen
     layer_lanes_stop_lines = processing.run('native:extractbylocation', { 'INPUT' : layer_lanes, 'INTERSECT' : layer_stop_nodes, 'PREDICATE' : [0], 'OUTPUT': 'memory:'})['OUTPUT']
-    layer_lanes = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_lanes, 'EXPRESSION' : '"highway" <> \'construction\' AND ("lane_markings" = \'yes\' OR "turn" IS NOT NULL OR "turn:forward" IS NOT NULL OR "turn:backward" IS NOT NULL OR "turn:lanes" IS NOT NULL OR "turn:lanes:forward" IS NOT NULL OR "turn:lanes:backward" IS NOT NULL OR "cycleway" = \'lane\' OR "cycleway:both" = \'lane\' OR "cycleway:right" = \'lane\' OR "cycleway:left" = \'lane\')', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_lanes = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_lanes, 'EXPRESSION' : '"highway" IS NOT \'construction\' AND ("lane_markings" = \'yes\' OR "turn" IS NOT NULL OR "turn:forward" IS NOT NULL OR "turn:backward" IS NOT NULL OR "turn:lanes" IS NOT NULL OR "turn:lanes:forward" IS NOT NULL OR "turn:lanes:backward" IS NOT NULL OR "cycleway" = \'lane\' OR "cycleway:both" = \'lane\' OR "cycleway:right" = \'lane\' OR "cycleway:left" = \'lane\')', 'OUTPUT': 'memory:'})['OUTPUT']
     layer_lanes = processing.run('native:mergevectorlayers', { 'LAYERS' : [layer_lanes, layer_lanes_stop_lines], 'OUTPUT': 'memory:'})['OUTPUT']
     layer_lanes = processing.run('native:deleteduplicategeometries', {'INPUT': layer_lanes, 'OUTPUT': 'memory:'})['OUTPUT']
 
@@ -2770,7 +2770,7 @@ if proc_lane_markings:
         #Start- und End-Vertices auswählen
         layer_dual_carriageways_vertices = processing.run('native:extractspecificvertices', { 'INPUT' : layer_lanes_dual_carriageway, 'VERTICES' : '0,-1', 'OUTPUT': 'memory:'})['OUTPUT']
         #Stützpunkte mit Liniensegmenten ohne dual_carriageway verschneiden, um nur Verzweigungspunkte zu erhalten
-        layer_lanes_single_carriageway = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_lanes, 'EXPRESSION' : '"dual_carriageway" <> \'yes\' and ("lane_markings" = \'yes\' or "turn_lanes" = \'yes\')', 'OUTPUT': 'memory:'})['OUTPUT']
+        layer_lanes_single_carriageway = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_lanes, 'EXPRESSION' : '"dual_carriageway" IS NOT \'yes\' and ("lane_markings" IS \'yes\' or "turn_lanes" IS \'yes\')', 'OUTPUT': 'memory:'})['OUTPUT']
         processing.run('native:selectbylocation', {'INPUT' : layer_dual_carriageways_vertices, 'INTERSECT' : layer_lanes_single_carriageway, 'METHOD' : 0, 'PREDICATE' : [4]})
         #Stützpunkte in Kreuzungsbereichen (area_highway/junction) aus der Auswahl entfernen -> alle übriggebliebenen sollten (meist) Verzweigungspunkte sein
         #---diese Beschränkung ist eigentlich unnötig, daher auskommentiert – bzw. sollte, wenn überhaupt, auf Knotenpunktbereiche ohne "lane_markings=yes" beschränkt bleiben
@@ -3448,15 +3448,15 @@ if proc_lane_markings:
     layer_lanes_bicycle_crossing = processing.run('native:clip', {'INPUT': layer_lanes_bicycle_crossing, 'OVERLAY': QgsProcessingFeatureSourceDefinition(layer_junction_areas.id(), selectedFeaturesOnly=True), 'OUTPUT': 'memory:'})['OUTPUT']
     layer_junction_areas.removeSelection()
 
-    processing.run('qgis:selectbyexpression', {'INPUT' : layer_junction_areas, 'EXPRESSION' : '"junction" = \'yes\' and "lane_markings" <> \'yes\''})
-    layer_lanes_no_junction_markings = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_lanes, 'EXPRESSION' : '"lane_markings:junction" <> \'yes\'', 'OUTPUT': 'memory:'})['OUTPUT']
+    processing.run('qgis:selectbyexpression', {'INPUT' : layer_junction_areas, 'EXPRESSION' : '"junction" = \'yes\' and "lane_markings" IS NOT \'yes\''})
+    layer_lanes_no_junction_markings = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_lanes, 'EXPRESSION' : '"lane_markings:junction" IS NOT \'yes\'', 'OUTPUT': 'memory:'})['OUTPUT']
     layer_lanes_no_junction_markings = processing.run('native:difference', {'INPUT' : layer_lanes_no_junction_markings, 'OVERLAY' : QgsProcessingFeatureSourceDefinition(layer_junction_areas.id(), selectedFeaturesOnly=True), 'OUTPUT': 'memory:'})['OUTPUT']
     layer_lanes_no_junction_markings = clearAttributes(layer_lanes_no_junction_markings, list_lane_attributes)
     layer_lanes_junction_markings = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_lanes, 'EXPRESSION' : '"lane_markings:junction" = \'yes\'', 'OUTPUT': 'memory:'})['OUTPUT']
     layer_lanes = processing.run('native:mergevectorlayers', { 'LAYERS' : [layer_lanes_no_junction_markings, layer_lanes_junction_markings], 'OUTPUT': 'memory:'})['OUTPUT']
 
     processing.run('qgis:selectbyexpression', {'INPUT' : layer_junction_areas, 'EXPRESSION' : '"crossing" = \'traffic_signals\' or "crossing" = \'marked\' or "crossing" = \'zebra\''})
-    layer_lanes_no_crossing_markings = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_lanes, 'EXPRESSION' : '"lane_markings:crossing" <> \'yes\'', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_lanes_no_crossing_markings = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_lanes, 'EXPRESSION' : '"lane_markings:crossing" IS NOT \'yes\'', 'OUTPUT': 'memory:'})['OUTPUT']
     layer_lanes_no_crossing_markings = processing.run('native:difference', {'INPUT' : layer_lanes_no_crossing_markings, 'OVERLAY' : QgsProcessingFeatureSourceDefinition(layer_junction_areas.id(), selectedFeaturesOnly=True), 'OUTPUT': 'memory:'})['OUTPUT']
     layer_lanes_no_crossing_markings = clearAttributes(layer_lanes_no_crossing_markings, list_lane_attributes)
     layer_lanes_crossing_markings = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_lanes, 'EXPRESSION' : '"lane_markings:crossing" = \'yes\'', 'OUTPUT': 'memory:'})['OUTPUT']
@@ -3983,7 +3983,7 @@ if proc_service:
     layer_highway = clearAttributes(layer_highway, ['highway', 'service', 'width', 'width:carriageway'])
     processing.run('native:multiparttosingleparts', {'INPUT' : layer_highway, 'OUTPUT' : proc_dir + 'service.geojson' })
     #create a second layer for building passages
-    layer_highway_building_passages = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_highway_building_passages, 'EXPRESSION' : '"tunnel" = \'building_passage\'', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_highway_building_passages = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_highway_building_passages, 'EXPRESSION' : '"tunnel" IS \'building_passage\'', 'OUTPUT': 'memory:'})['OUTPUT']
     layer_highway_building_passages = processing.run('native:retainfields', { 'INPUT' : layer_highway_building_passages, 'FIELDS' : ['highway', 'service', 'width', 'width:carriageway', 'tunnel'], 'OUTPUT' : proc_dir + 'service_passages.geojson' })
 
     clearVariables([layer_highway, layer_highway_building_passages])
@@ -4035,8 +4035,8 @@ if proc_oneways:
     print(time.strftime('%H:%M:%S', time.localtime()), '   Erzeuge Kreuzungspunkte (Verkehrsstraßen)...')
     QgsProject.instance().addMapLayer(layer_ways_for_intersections, False)
     QgsProject.instance().addMapLayer(layer_ways, False)
-    processing.run('qgis:selectbyexpression', {'INPUT' : layer_ways_for_intersections, 'EXPRESSION' : '"highway" = \'primary\' or "highway" = \'secondary\' or "highway" = \'tertiary\' or "highway" = \'residential\' or "highway" = \'unclassified\' or "highway" = \'living_street\' or "highway" = \'pedestrian\' or "highway" = \'road\''})
-    processing.run('qgis:selectbyexpression', {'INPUT' : layer_ways, 'EXPRESSION' : '"highway" = \'primary\' or "highway" = \'secondary\' or "highway" = \'tertiary\' or "highway" = \'residential\' or "highway" = \'unclassified\' or "highway" = \'living_street\' or "highway" = \'pedestrian\' or "highway" = \'road\''})
+    processing.run('qgis:selectbyexpression', {'INPUT' : layer_ways_for_intersections, 'EXPRESSION' : '"highway" IS \'primary\' or "highway" IS \'secondary\' or "highway" IS \'tertiary\' or "highway" IS \'residential\' or "highway" IS \'unclassified\' or "highway" IS \'living_street\' or "highway" IS \'pedestrian\' or "highway" IS \'road\''})
+    processing.run('qgis:selectbyexpression', {'INPUT' : layer_ways, 'EXPRESSION' : '"highway" IS \'primary\' or "highway" IS \'secondary\' or "highway" IS \'tertiary\' or "highway" IS \'residential\' or "highway" IS \'unclassified\' or "highway" IS \'living_street\' or "highway" IS \'pedestrian\' or "highway" IS \'road\''})
     layer_roads_intersections = processing.run('native:lineintersections', {'INPUT': QgsProcessingFeatureSourceDefinition(layer_ways_for_intersections.id(), selectedFeaturesOnly=True), 'INTERSECT': QgsProcessingFeatureSourceDefinition(layer_ways_for_intersections.id(), selectedFeaturesOnly=True), 'OUTPUT': 'memory:'})['OUTPUT']
     #Start- und End-Vertices hinzufügen, da diese meist ebenfalls Kreuzungspunkte sind
     layer_roads_vertices = processing.run('native:extractspecificvertices', { 'INPUT' : QgsProcessingFeatureSourceDefinition(layer_ways_for_intersections.id(), selectedFeaturesOnly=True), 'VERTICES' : '0,-1', 'OUTPUT': 'memory:'})['OUTPUT']
@@ -4237,7 +4237,7 @@ if proc_buildings:
     #vorher Gebäudeteile ohne min_level von allen Gebäudeteilen abziehen, um Gebäudeteile innerhalb von (schwebenden) Gebäudeteilen zu berücksichtigen
     layer_building_parts_min_level = processing.run('native:difference', {'INPUT' : QgsProcessingFeatureSourceDefinition(layer_building_parts_min_level_1.id(), flags=QgsProcessingFeatureSourceDefinition.FlagOverrideDefaultGeometryCheck, geometryCheck=QgsFeatureRequest.GeometrySkipInvalid), 'OVERLAY' : QgsProcessingFeatureSourceDefinition(layer_building_parts_min_level_0.id(), flags=QgsProcessingFeatureSourceDefinition.FlagOverrideDefaultGeometryCheck, geometryCheck=QgsFeatureRequest.GeometrySkipInvalid), 'OUTPUT': 'memory:'})['OUTPUT']
 
-    layer_building_footprints = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_buildings, 'EXPRESSION' : '\"building\" <> \'roof\' AND ("building:min_level" <= 0 OR "building:min_level" IS NULL) AND ("min_height" <= 0 OR "min_height" IS NULL)', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_building_footprints = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_buildings, 'EXPRESSION' : '\"building\" IS NOT \'roof\' AND ("building:min_level" <= 0 OR "building:min_level" IS NULL) AND ("min_height" <= 0 OR "min_height" IS NULL)', 'OUTPUT': 'memory:'})['OUTPUT']
     layer_building_footprints = processing.run('native:difference', { 'INPUT': layer_building_footprints, 'OVERLAY' : layer_building_parts_min_level, 'OUTPUT': 'memory:'})['OUTPUT']
 
     #Linien für Gebäudegrundrisskanten erzeugen, je nach dem, ob sie unter schwebenden Gebäudeteilen verlaufen oder nicht
@@ -4563,11 +4563,11 @@ if proc_orient_man_made:
     layer_street_furniture_buffer_12 = processing.run('native:buffer', { 'INPUT' : layer_street_furniture, 'DISTANCE' : 12, 'OUTPUT': 'memory:'})['OUTPUT']
     layer_street_furniture_buffer_5 = processing.run('native:buffer', { 'INPUT' : layer_street_furniture, 'DISTANCE' : 5, 'OUTPUT': 'memory:'})['OUTPUT']
     layer_next_streets = processing.run('native:intersection', { 'INPUT' : layer_raw_highway_ways, 'INPUT_FIELDS' : ['id','highway'], 'OVERLAY' : layer_street_furniture_buffer_12, 'OVERLAY_FIELDS' : ['man_made', 'amenity'], 'OVERLAY_FIELDS_PREFIX' : '', 'OUTPUT': 'memory:'})['OUTPUT']
-    layer_next_roads = processing.run('qgis:extractbyexpression', {'INPUT' : layer_next_streets, 'EXPRESSION' : '"highway" = \'primary\' or "highway" = \'secondary\' or "highway" = \'tertiary\' or "highway" = \'residential\' or "highway" = \'unclassified\' or "highway" = \'living_street\' or "highway" = \'pedestrian\' or "highway" = \'road\'', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_next_roads = processing.run('qgis:extractbyexpression', {'INPUT' : layer_next_streets, 'EXPRESSION' : '"highway" IS \'primary\' or "highway" IS \'secondary\' or "highway" IS \'tertiary\' or "highway" IS \'residential\' or "highway" IS \'unclassified\' or "highway" IS \'living_street\' or "highway" IS \'pedestrian\' or "highway" IS \'road\'', 'OUTPUT': 'memory:'})['OUTPUT']
     layer_next_roads = processing.run('native:reprojectlayer', { 'INPUT' : layer_next_roads, 'TARGET_CRS' : QgsCoordinateReferenceSystem(crs_to), 'OUTPUT': 'memory:'})['OUTPUT']
 
     layer_next_ways = processing.run('native:intersection', { 'INPUT' : layer_next_streets, 'INPUT_FIELDS' : ['id','highway'], 'OVERLAY' : layer_street_furniture_buffer_5, 'OVERLAY_FIELDS' : ['man_made', 'amenity'], 'OVERLAY_FIELDS_PREFIX' : '', 'OUTPUT': 'memory:'})['OUTPUT']
-    layer_next_ways = processing.run('qgis:extractbyexpression', {'INPUT' : layer_next_ways, 'EXPRESSION' : '"highway" <> \'primary\' and "highway" <> \'secondary\' and "highway" <> \'tertiary\' and "highway" <> \'residential\' and "highway" <> \'unclassified\' and "highway" <> \'living_street\' and "highway" <> \'pedestrian\' and "highway" <> \'road\'', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_next_ways = processing.run('qgis:extractbyexpression', {'INPUT' : layer_next_ways, 'EXPRESSION' : '"highway" IS NOT \'primary\' and "highway" IS NOT \'secondary\' and "highway" IS NOT \'tertiary\' and "highway" IS NOT \'residential\' and "highway" IS NOT \'unclassified\' and "highway" IS NOT \'living_street\' and "highway" IS NOT \'pedestrian\' and "highway" IS NOT \'road\'', 'OUTPUT': 'memory:'})['OUTPUT']
 
     layer_next_path = processing.run('native:intersection', { 'INPUT' : layer_raw_path_ways, 'INPUT_FIELDS' : ['id','highway'], 'OVERLAY' : layer_street_furniture_buffer_5, 'OVERLAY_FIELDS' : ['man_made', 'amenity'], 'OVERLAY_FIELDS_PREFIX' : '', 'OUTPUT': 'memory:'})['OUTPUT']
 
@@ -4937,7 +4937,7 @@ if proc_labels:
 
     #für Straßennamen:
     #nur Straßennetz verarbeiten
-    layer_streets = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_raw_highway_ways, 'EXPRESSION' : '"highway" <> \'platform\' and NOT("highway" like \'%_link\') and "highway" IS NOT NULL', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_streets = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_raw_highway_ways, 'EXPRESSION' : '"highway" IS NOT \'platform\' and NOT("highway" like \'%_link\') and "highway" IS NOT NULL', 'OUTPUT': 'memory:'})['OUTPUT']
 
     #Straßen und Wege nach den Merkmalen Name, Klassifikation und Zweirichtungs-Fahrbahn vereinigen
     print(time.strftime('%H:%M:%S', time.localtime()), '   Straßen nach gemeinsamen Merkmalen vereinigen...')
@@ -4948,8 +4948,8 @@ if proc_labels:
     layer_streetnames = processing.run('native:reprojectlayer', { 'INPUT' : layer_streetnames, 'TARGET_CRS' : QgsCoordinateReferenceSystem(crs_to), 'OUTPUT': 'memory:'})['OUTPUT']
 
     #Zweirichtungs-Fahrbahnen herauslösen
-    layer_streetnames_dual = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_streetnames, 'EXPRESSION' : '"dual_carriageway" = \'yes\'', 'OUTPUT': 'memory:'})['OUTPUT']
-    layer_streetnames_not_dual = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_streetnames, 'EXPRESSION' : '"dual_carriageway" <> \'yes\'', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_streetnames_dual = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_streetnames, 'EXPRESSION' : '"dual_carriageway" IS \'yes\'', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_streetnames_not_dual = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_streetnames, 'EXPRESSION' : '"dual_carriageway" IS NOT \'yes\'', 'OUTPUT': 'memory:'})['OUTPUT']
 
     print(time.strftime('%H:%M:%S', time.localtime()), '   Zweirichtungs-Fahrbahnen vereinfachen...')
     #Allen Zweirichtungs-Fahrbahnen und ihren Parallel-Segmenten eine neue eindeutige ID geben
@@ -5018,7 +5018,7 @@ if proc_labels:
     #Nebenstraßen an Hauptstraßen (primary/secondary) teilen
     layer_main_streets = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_streetnames, 'EXPRESSION' : '"highway" = \'primary\' or "highway" = \'secondary\'', 'OUTPUT': 'memory:'})['OUTPUT']
     QgsProject.instance().addMapLayer(layer_streetnames, False)
-    processing.run('qgis:selectbyexpression', {'INPUT' : layer_streetnames, 'EXPRESSION' : '"highway" <> \'primary\' and "highway" <> \'secondary\'' })
+    processing.run('qgis:selectbyexpression', {'INPUT' : layer_streetnames, 'EXPRESSION' : '"highway" IS NOT \'primary\' and "highway" IS NOT \'secondary\'' })
     layer_streetnames = processing.run('native:splitwithlines', { 'INPUT' : QgsProcessingFeatureSourceDefinition(layer_streetnames.id(), selectedFeaturesOnly=True), 'LINES' : layer_main_streets, 'OUTPUT': 'memory:'})['OUTPUT']
     layer_streetnames = processing.run('native:mergevectorlayers', { 'LAYERS' : [layer_streetnames, layer_main_streets], 'OUTPUT': 'memory:'})['OUTPUT']
     layer_streetnames = clearAttributes(layer_streetnames, streetname_attributes)
@@ -5059,7 +5059,7 @@ if proc_parking_areas:
     layer_kieze = QgsVectorLayer(parking_dir + 'kieze.geojson|geometrytype=Polygon', 'kieze', 'ogr')
 
     #Parkplätze für Kund:innen oder Mitarbeiter:innen sowie ungenutzte Parkplätze herausfiltern
-    layer_parking_areas = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_parking_areas, 'EXPRESSION' : '"status" <> \'disused\' and "access" <> \'customers\' and "access" <> \'employees\' and "access" <> \'no\' and "access" <> \'police\'', 'OUTPUT': 'memory:'})['OUTPUT']
+    layer_parking_areas = processing.run('qgis:extractbyexpression', { 'INPUT' : layer_parking_areas, 'EXPRESSION' : '"status" IS NOT \'disused\' and "access" IS NOT \'customers\' and "access" IS NOT \'employees\' and "access" IS NOT \'no\' and "access" IS NOT \'police\'', 'OUTPUT': 'memory:'})['OUTPUT']
 
     #Punkte in Parkplätzen entsprechend ihrer Kapazität erzeugen
     print(time.strftime('%H:%M:%S', time.localtime()), '...Erzeuge Einzelpunkte...')
