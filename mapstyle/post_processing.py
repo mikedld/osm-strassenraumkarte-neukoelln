@@ -796,7 +796,7 @@ def try_get_attribute(feature, name):
 def processing_run_to_memory(name, algo, params):
     try:
         layer = processing.run(algo, params | {'OUTPUT': 'memory:'})['OUTPUT']
-    except QgsProcessingException: # "Could not create memory layer" (no explanation as to why...)
+    except QgsProcessingException: # "Could not create memory layer", "Could not write feature into OUTPUT" (no explanation as to why...)
         layer = processing.run(algo, params | {'OUTPUT': proc_dir + f'tmp_{name}.geojson'})['OUTPUT']
         layer = QgsVectorLayer(layer, f'tmp_{name}', 'ogr')
     return layer
@@ -3899,8 +3899,8 @@ if proc_lane_markings:
             #Liniensegmente zur schöneren Darstellung auf jeder Seite um 12,5cm verlängern (25cm = Linienbreite Fahrbahnmarkierungen / 2)
             layer_junction_lines = processing.run('native:extendlines', { 'INPUT' : layer_junction_lines, 'START_DISTANCE' : 0.125, 'END_DISTANCE' : 0.125, 'OUTPUT': 'memory:'})['OUTPUT']
             #Liniensegmente zusammenführen und mit Basis-Attributen versehen
-            layer_junction_lines = processing.run('native:dissolve', { 'INPUT' : layer_junction_lines, 'OUTPUT': 'memory:'})['OUTPUT']
-            layer_junction_lines = processing.run('native:multiparttosingleparts', { 'INPUT' : layer_junction_lines, 'OUTPUT': 'memory:'})['OUTPUT']
+            layer_junction_lines = processing_run_to_memory('junction_lines', 'native:dissolve', { 'INPUT' : layer_junction_lines })
+            layer_junction_lines = processing_run_to_memory('junction_lines_2', 'native:multiparttosingleparts', { 'INPUT' : layer_junction_lines })
             for junction_line in layer_junction_lines.getFeatures():
                 junction_line.setAttributes(['stop_line', NULL, NULL, 'solid_line', temporary])
                 provider.addFeature(junction_line)
